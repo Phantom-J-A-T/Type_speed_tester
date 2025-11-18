@@ -3,6 +3,7 @@ Typing Speed Test App using Tkinter
 - Light/Dark theme toggle
 - Modern UI layout
 - Rounded typing input boxes (simulated using Canvas)
+- Initial startup screen to collect user name and subject
 """
 
 import tkinter as tk
@@ -11,10 +12,17 @@ import time
 import random
 
 # -----------------------------
-# Load sentences
+# Load and Structure Sentences
 # -----------------------------
 def load_sentences(file_path="sample.txt"):
-    sentences = {"Easy": [], "Medium": [], "Hard": []}
+    """
+    Loads sentences from the text file, grouping them by Subject and then by Difficulty.
+    
+    Returns: 
+        dict: {Subject: {Difficulty: [sentences]}}
+    """
+    all_subjects = {}
+    current_subject = None
     current_level = None
 
     try:
@@ -23,23 +31,40 @@ def load_sentences(file_path="sample.txt"):
                 line = line.strip()
                 if not line:
                     continue
+                
+                # Check for Subject marker (e.g., [PHYSICS])
                 if line.startswith("[") and line.endswith("]"):
-                    level = line[1:-1]
-                    if level in sentences:
+                    subject = line[1:-1]
+                    current_subject = subject
+                    all_subjects[current_subject] = {"EASY": [], "MEDIUM": [], "HARD": []}
+                    current_level = None # Reset level when subject changes
+                
+                # Check for Difficulty level within a Subject block
+                elif current_subject and line.upper().startswith(("EASY:", "MEDIUM:", "HARD:")):
+                    parts = line.split(":", 1)
+                    level = parts[0].strip().upper()
+                    sentence_text = parts[1].strip()
+                    
+                    if level in all_subjects[current_subject]:
                         current_level = level
-                else:
-                    if current_level:
-                        sentences[current_level].append(line)
+                        # Split by period and filter out short empty strings, then re-join with a period
+                        sentences = [s.strip() for s in sentence_text.split('.') if s.strip()]
+                        for sentence in sentences:
+                            # Add back the period if it was removed
+                            all_subjects[current_subject][current_level].append(sentence + '.')
+
     except FileNotFoundError:
         messagebox.showerror("Error", "sample.txt not found!")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error processing sample.txt: {e}")
 
-    return sentences
+    return all_subjects
 
 # -----------------------------
 # Rounded Entry / Text creators
 # -----------------------------
 
-def create_rounded_textbox(parent, width=80, height=6, bg="#ffffff", radius=25): # Increased height and radius
+def create_rounded_textbox(parent, width=80, height=6, bg="#ffffff", radius=25):
     # Remove bg=bg from canvas creation to allow parent bg to show
     canvas = tk.Canvas(parent, highlightthickness=0)
     # Use grid instead of pack for more control
@@ -73,14 +98,86 @@ def create_rounded_textbox(parent, width=80, height=6, bg="#ffffff", radius=25):
     return text_widget
 
 # -----------------------------
+# Login Screen
+# -----------------------------
+
+def show_login_screen(root, subjects):
+    """
+    Shows a temporary login screen to get user name and subject preference.
+    """
+    
+    # Create a transient window that blocks the main window
+    login_window = tk.Toplevel(root)
+    login_window.title("Welcome")
+    login_window.geometry("400x200")
+    login_window.transient(root)
+    login_window.grab_set()
+    root.wait_window(login_window)
+
+    # Variables to hold user input
+    user_name_var = tk.StringVar(value="")
+    subject_var = tk.StringVar(value=subjects[0] if subjects else "N/A")
+    result = {"name": "", "subject": ""}
+
+    def submit():
+        nonlocal result
+        name = user_name_var.get().strip()
+        if not name:
+            messagebox.showerror("Error", "Please enter your name.")
+            return
+
+        result["name"] = name
+        result["subject"] = subject_var.get()
+        login_window.destroy()
+
+    # --- UI Elements ---
+    
+    main_frame = ttk.Frame(login_window, padding="20 20 20 20")
+    main_frame.pack(fill='both', expand=True)
+
+    # 1. Name Input
+    ttk.Label(main_frame, text="Enter Your Name:", font=("Arial", 12, "bold")).pack(pady=5)
+    name_entry = ttk.Entry(main_frame, textvariable=user_name_var, width=30, font=("Arial", 12))
+    name_entry.pack(pady=5)
+    name_entry.focus_set()
+
+    # 2. Subject Selection
+    ttk.Label(main_frame, text="Choose Subject:", font=("Arial", 12, "bold")).pack(pady=5)
+    subject_menu = ttk.Combobox(main_frame, textvariable=subject_var,
+                                values=subjects, state="readonly", width=28,
+                                font=("Arial", 12))
+    subject_menu.pack(pady=5)
+    subject_menu.set(subjects[0] if subjects else "N/A")
+
+    # 3. Start Button
+    ttk.Button(main_frame, text="Start Typing Test", command=submit).pack(pady=15)
+    
+    # Wait for the login window to close
+    root.wait_window(login_window)
+    
+    return result
+
+# -----------------------------
 # Main App Class
 # -----------------------------
 
 class TypingTestApp:
-    def __init__(self, root):
+    def __init__(self, root, user_info):
+        self.user_name = user_info['name']
+        self.selected_subject = user_info['subject']
+        self.all_sentences = load_sentences()
+        
+        # Filter sentences based on selected subject
+        self.sentences = self.all_sentences.get(self.selected_subject, {})
+
+        if not any(self.sentences.values()): # Check if all levels for the subject are empty
+            messagebox.showerror("Error", f"No sentences available for the subject: {self.selected_subject}")
+            self.root = None # Mark as failed to initialize
+            return
+
         self.target_sentence = ""
         self.root = root
-        self.root.title("Typing Speed Test App")
+        self.root.title(f"{self.user_name}'s Typing Test - {self.selected_subject}")
         self.root.geometry("900x700") # Increased height to ensure button visibility
         self.root.resizable(False, False)
         
@@ -93,12 +190,6 @@ class TypingTestApp:
         self.root.grid_rowconfigure(1, weight=1) # Main Content (text boxes)
         self.root.grid_rowconfigure(2, weight=0) # Bottom Bar
         self.root.grid_columnconfigure(0, weight=1)
-
-
-        self.sentences = load_sentences()
-        if not any(self.sentences.values()): # Check if all lists are empty
-            # If no sentences, destroy root after user sees the error (in load_sentences)
-            return
 
         self.start_time = None
         self.theme_var = tk.StringVar(value="light")
@@ -124,9 +215,11 @@ class TypingTestApp:
         self.dark_button.pack(side="left", padx=5)
 
         # Difficulty Menu (Center)
-        self.difficulty_var = tk.StringVar(value="Easy")
+        # Difficulty values are now based on the keys of the filtered sentences: EASY, MEDIUM, HARD
+        self.difficulty_levels = ["EASY", "MEDIUM", "HARD"]
+        self.difficulty_var = tk.StringVar(value="EASY")
         self.difficulty_menu = ttk.Combobox(self.top_bar, textvariable=self.difficulty_var,
-                                            values=["Easy", "Medium", "Hard"], state="readonly", width=15,
+                                            values=self.difficulty_levels, state="readonly", width=15,
                                             font=("Arial", 12, "bold"), style="Black.TCombobox")
         self.difficulty_menu.grid(row=0, column=1, sticky="n")
 
@@ -276,9 +369,12 @@ class TypingTestApp:
 
 
     def start_test(self):
+        # Difficulty is now a key in the filtered sentences dictionary
         difficulty = self.difficulty_var.get()
-        if not self.sentences[difficulty]:
-            messagebox.showerror("Error", f"No sentences for {difficulty} difficulty!")
+        
+        # Check if the sentence list for the current difficulty is valid and not empty
+        if difficulty not in self.sentences or not self.sentences[difficulty]:
+            messagebox.showerror("Error", f"No sentences for {self.selected_subject} - {difficulty} difficulty!")
             return
 
         self.target_sentence = random.choice(self.sentences[difficulty])
@@ -380,7 +476,8 @@ class TypingTestApp:
                 error_count += 1
         
         # 2. Calculate Final WPM (using typed words)
-        words = len(self.target_sentence.split()) # Base WPM on target sentence word count for standard calculation
+        # Use target sentence word count for standard calculation
+        words = len(self.target_sentence.split()) 
         if time_taken < 0.1: 
             time_taken = 0.1
             
@@ -390,7 +487,8 @@ class TypingTestApp:
         self.wpm_value_label.config(text=f"{wpm:.0f}")
         
         messagebox.showinfo("Test Complete!", 
-                            f"Congratulations!\n\n"
+                            f"**User: {self.user_name}**\n"
+                            f"**Subject: {self.selected_subject}**\n\n"
                             f"Final WPM: {wpm:.0f}\n"
                             f"Character Errors: {error_count}")
         
@@ -399,11 +497,23 @@ class TypingTestApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = TypingTestApp(root)
     
-    # Initial binding reference (needs to be set after app initialization)
-    if hasattr(app, 'input_box'):
-        # Initial binding reference is saved to allow unbinding later
-        app.start_timer_binding = app.input_box.bind("<KeyPress>", app.start_timer)
-    
-    root.mainloop()
+    # 1. Load subjects first to populate the login screen
+    all_sentences = load_sentences()
+    subjects = list(all_sentences.keys())
+
+    # 2. Show login screen to get user info
+    user_info = show_login_screen(root, subjects)
+
+    # 3. Proceed to the main app if valid info was gathered
+    if user_info['name'] and user_info['subject']:
+        app = TypingTestApp(root, user_info)
+        
+        # Initial binding reference (needs to be set after app initialization)
+        if hasattr(app, 'input_box'):
+            # Initial binding reference is saved to allow unbinding later
+            app.start_timer_binding = app.input_box.bind("<KeyPress>", app.start_timer)
+        
+        root.mainloop()
+    else:
+        root.destroy()
