@@ -1,65 +1,86 @@
-[Easy]
-The sun rises in the east.
-Typing is fun and easy to learn.
-Practice makes you better every day.
-Cats love to sleep in warm places.
-I enjoy reading books at night.
-The dog barked loudly at the mailman.
-Fresh air makes morning walks enjoyable.
-Birds fly high above the trees.
-She smiled warmly at her friend.
-The water in the river flows calmly.
-I like to drink cold water on hot days.
-The child played happily in the garden.
-He wrote his name neatly on the paper.
-The sky is bright and clear today.
-We took a short break after lunch.
-My brother loves playing football.
-The cake tasted sweet and delicious.
-The little boy hugged his teddy bear.
-The teacher walked quietly into the class.
-We laughed at the funny cartoon.
+[PHYSICS] EASY: Newton’s First Law of Motion: A body remains at rest or
+in uniform motion unless acted upon by an external force. Hooke’s Law:
+The extension of a spring is directly proportional to the force applied.
+Law of Reflection: The angle of incidence equals the angle of
+reflection.
 
-[Medium]
-The quick brown fox jumps over the lazy dog.
-Consistency is the key to improving typing speed.
-Technology continues to evolve at a rapid pace.
-She carefully arranged the flowers on the table.
-Good communication skills open many opportunities.
-The weather forecast predicted heavy rainfall this week.
-Developing new habits requires patience and discipline.
-The library provides numerous resources for students.
-He completed the assignment before the deadline.
-The team worked together to solve the problem.
-The scientist explained the results of the experiment clearly.
-Confidence grows when you practice regularly.
-Her creativity allowed her to design a beautiful layout.
-The company's success relied on strategic planning.
-Students must balance schoolwork and personal life.
-The software update improved performance significantly.
-He walked through the crowded market without hesitation.
-The museum displayed ancient artifacts from various cultures.
-The garden was filled with colorful flowers and butterflies.
-Time management helps reduce unnecessary stress.
+MEDIUM: Newton’s Second Law: Force equals mass times acceleration.
+Archimedes’ Principle: Upthrust equals weight of displaced fluid. Ohm’s
+Law: Current is directly proportional to voltage.
 
-[Hard]
-The extraordinary complexity of human behavior fascinates scientists worldwide.
-Innovative engineering solutions often arise from unexpected challenges.
-Quantum computing promises to revolutionize information processing in the coming decades.
-The synchronization of distributed systems requires precise timing mechanisms.
-A multidisciplinary approach enhances the effectiveness of modern problem-solving strategies.
-The architectural design incorporated sustainable materials to improve energy efficiency.
-Advanced cryptographic algorithms safeguard sensitive data across global networks.
-Environmental researchers emphasize the importance of long-term ecological preservation.
-Economic fluctuations influence the development of international trade policies.
-Artificial intelligence continues to transform industries through automation and optimization.
-The intricate relationship between culture and language has been studied for centuries.
-Renewable energy technologies play a crucial role in combating climate change.
-The effectiveness of a neural network depends heavily on its training data quality.
-Pharmaceutical innovations have significantly improved modern healthcare outcomes.
-Accurate climate predictions require comprehensive atmospheric modeling techniques.
-The transportation sector is undergoing a transition toward cleaner alternatives.
-Complex algorithms enable machines to interpret vast amounts of data efficiently.
-Scientists utilize particle accelerators to study the fundamental components of matter.
-The evolution of digital communication reshapes social interactions across societies.
-Understanding the brain's neural pathways remains one of science's grand challenges.
+HARD: Newton’s Third Law: Every action has an equal and opposite
+reaction. Universal Gravitation: Force is proportional to product of
+masses and inversely proportional to square of distance. Kirchhoff’s
+Voltage Law: Sum of voltages in a loop is zero.
+
+[CHEMISTRY] EASY: Law of Conservation of Mass: Matter cannot be created
+or destroyed. Dalton’s Theory: All matter is made of atoms. Boyle’s Law:
+Pressure is inversely proportional to volume.
+
+MEDIUM: Charles’ Law: Volume is proportional to temperature. Avogadro’s
+Law: Equal volumes of gases contain equal molecules. Periodic Law:
+Properties vary periodically with atomic number.
+
+HARD: Le Chatelier’s Principle: System shifts to oppose change. Graham’s
+Law: Diffusion rate inversely proportional to square root of density.
+Hess’s Law: Total enthalpy change is independent of path.
+
+[BIOLOGY] EASY: Cell Theory: All living things are made of cells. Law of
+Dominance: Dominant traits mask recessive traits. Use and Disuse: Used
+organs develop, unused weaken.
+
+MEDIUM: Segregation Law: Alleles separate during gamete formation.
+Natural Selection: Fittest organisms survive and reproduce. Homeostasis:
+Regulation of stable internal conditions.
+
+HARD: Independent Assortment: Genes assort independently. Hardy–Weinberg
+Principle: Allele frequencies remain constant without external forces.
+Binomial Nomenclature: Organisms have two-part scientific names.
+
+[ECONOMICS] EASY: Law of Demand: Higher price, lower quantity demanded.
+Law of Supply: Higher price, higher quantity supplied. Diminishing
+Utility: Extra satisfaction decreases with each additional unit.
+
+MEDIUM: Diminishing Returns: Output eventually decreases with more
+input. Equilibrium Law: Supply equals demand at equilibrium. Engel’s
+Law: Food spending ratio decreases as income rises.
+
+HARD: Gresham’s Law: Bad money drives out good money. Say’s Law: Supply
+creates its own demand. Comparative Advantage: Specialization based on
+lower opportunity cost.
+
+[GEOGRAPHY] EASY: Superposition Law: Older rock layers lie beneath
+younger ones. Continental Drift: Continents slowly move apart.
+Hydrological Cycle: Water circulates through evaporation and
+precipitation.
+
+MEDIUM: Plate Tectonics: Earth’s crustal plates move slowly. Coriolis
+Effect: Deflection of wind due to Earth’s rotation. River Maturity Law:
+Rivers evolve through stages.
+
+HARD: Uniformitarianism: Current geological processes operated in the
+past. Thermal Expansion: Rocks expand when heated and crack when cooled.
+Lapse Rate Law: Temperature decreases with altitude.
+
+[MATHEMATICS] EASY: Pythagoras’ Theorem: a² + b² = c² in right
+triangles. Commutative Law: a + b = b + a. Associative Law: (a + b) + c
+= a + (b + c).
+
+MEDIUM: Quadratic Formula: Solutions of ax² + bx + c = 0. Sine Rule:
+a/sin(A) = b/sin(B) = c/sin(C). Cosine Rule: c² = a² + b² − 2ab cos(C).
+
+HARD: Binomial Theorem: Expands expressions of form (a + b)^n. Limit
+Definition: Limit as x approaches a of f(x). Vector Dot Product: a·b =
+|a||b|cosθ.
+
+[COMPUTER SCIENCE] EASY: Algorithm: Step-by-step procedure for solving a
+problem. Input/Output Law: Computers process input to produce output.
+Binary System: Data represented in 0s and 1s.
+
+MEDIUM: Boolean Logic: Operations use AND, OR, NOT. Machine Language:
+Lowest-level programming instructions. Data Structure: Organized way of
+storing data.
+
+HARD: Big O Notation: Measures algorithm efficiency. CPU Scheduling:
+Determines order of process execution. Memory Management: Allocation and
+control of system memory.
