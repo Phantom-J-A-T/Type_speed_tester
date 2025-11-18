@@ -1,0 +1,65 @@
+[Easy]
+The sun rises in the east.
+Typing is fun and easy to learn.
+Practice makes you better every day.
+Cats love to sleep in warm places.
+I enjoy reading books at night.
+The dog barked loudly at the mailman.
+Fresh air makes morning walks enjoyable.
+Birds fly high above the trees.
+She smiled warmly at her friend.
+The water in the river flows calmly.
+I like to drink cold water on hot days.
+The child played happily in the garden.
+He wrote his name neatly on the paper.
+The sky is bright and clear today.
+We took a short break after lunch.
+My brother loves playing football.
+The cake tasted sweet and delicious.
+The little boy hugged his teddy bear.
+The teacher walked quietly into the class.
+We laughed at the funny cartoon.
+
+[Medium]
+The quick brown fox jumps over the lazy dog.
+Consistency is the key to improving typing speed.
+Technology continues to evolve at a rapid pace.
+She carefully arranged the flowers on the table.
+Good communication skills open many opportunities.
+The weather forecast predicted heavy rainfall this week.
+Developing new habits requires patience and discipline.
+The library provides numerous resources for students.
+He completed the assignment before the deadline.
+The team worked together to solve the problem.
+The scientist explained the results of the experiment clearly.
+Confidence grows when you practice regularly.
+Her creativity allowed her to design a beautiful layout.
+The company's success relied on strategic planning.
+Students must balance schoolwork and personal life.
+The software update improved performance significantly.
+He walked through the crowded market without hesitation.
+The museum displayed ancient artifacts from various cultures.
+The garden was filled with colorful flowers and butterflies.
+Time management helps reduce unnecessary stress.
+
+[Hard]
+The extraordinary complexity of human behavior fascinates scientists worldwide.
+Innovative engineering solutions often arise from unexpected challenges.
+Quantum computing promises to revolutionize information processing in the coming decades.
+The synchronization of distributed systems requires precise timing mechanisms.
+A multidisciplinary approach enhances the effectiveness of modern problem-solving strategies.
+The architectural design incorporated sustainable materials to improve energy efficiency.
+Advanced cryptographic algorithms safeguard sensitive data across global networks.
+Environmental researchers emphasize the importance of long-term ecological preservation.
+Economic fluctuations influence the development of international trade policies.
+Artificial intelligence continues to transform industries through automation and optimization.
+The intricate relationship between culture and language has been studied for centuries.
+Renewable energy technologies play a crucial role in combating climate change.
+The effectiveness of a neural network depends heavily on its training data quality.
+Pharmaceutical innovations have significantly improved modern healthcare outcomes.
+Accurate climate predictions require comprehensive atmospheric modeling techniques.
+The transportation sector is undergoing a transition toward cleaner alternatives.
+Complex algorithms enable machines to interpret vast amounts of data efficiently.
+Scientists utilize particle accelerators to study the fundamental components of matter.
+The evolution of digital communication reshapes social interactions across societies.
+Understanding the brain's neural pathways remains one of science's grand challenges.
