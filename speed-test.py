@@ -98,106 +98,130 @@ def create_rounded_textbox(parent, width=80, height=6, bg="#ffffff", radius=25):
     return text_widget
 
 # -----------------------------
-# Login Screen
-# -----------------------------
-
-def show_login_screen(root, subjects):
-    """
-    Shows a temporary login screen to get user name and subject preference.
-    """
-    
-    # Create a transient window that blocks the main window
-    login_window = tk.Toplevel(root)
-    login_window.title("Welcome")
-    login_window.geometry("400x200")
-    login_window.transient(root)
-    login_window.grab_set()
-    root.wait_window(login_window)
-
-    # Variables to hold user input
-    user_name_var = tk.StringVar(value="")
-    subject_var = tk.StringVar(value=subjects[0] if subjects else "N/A")
-    result = {"name": "", "subject": ""}
-
-    def submit():
-        nonlocal result
-        name = user_name_var.get().strip()
-        if not name:
-            messagebox.showerror("Error", "Please enter your name.")
-            return
-
-        result["name"] = name
-        result["subject"] = subject_var.get()
-        login_window.destroy()
-
-    # --- UI Elements ---
-    
-    main_frame = ttk.Frame(login_window, padding="20 20 20 20")
-    main_frame.pack(fill='both', expand=True)
-
-    # 1. Name Input
-    ttk.Label(main_frame, text="Enter Your Name:", font=("Arial", 12, "bold")).pack(pady=5)
-    name_entry = ttk.Entry(main_frame, textvariable=user_name_var, width=30, font=("Arial", 12))
-    name_entry.pack(pady=5)
-    name_entry.focus_set()
-
-    # 2. Subject Selection
-    ttk.Label(main_frame, text="Choose Subject:", font=("Arial", 12, "bold")).pack(pady=5)
-    subject_menu = ttk.Combobox(main_frame, textvariable=subject_var,
-                                values=subjects, state="readonly", width=28,
-                                font=("Arial", 12))
-    subject_menu.pack(pady=5)
-    subject_menu.set(subjects[0] if subjects else "N/A")
-
-    # 3. Start Button
-    ttk.Button(main_frame, text="Start Typing Test", command=submit).pack(pady=15)
-    
-    # Wait for the login window to close
-    root.wait_window(login_window)
-    
-    return result
-
-# -----------------------------
 # Main App Class
 # -----------------------------
 
 class TypingTestApp:
-    def __init__(self, root, user_info):
-        self.user_name = user_info['name']
-        self.selected_subject = user_info['subject']
-        self.all_sentences = load_sentences()
-        
-        # Filter sentences based on selected subject
-        self.sentences = self.all_sentences.get(self.selected_subject, {})
-
-        if not any(self.sentences.values()): # Check if all levels for the subject are empty
-            messagebox.showerror("Error", f"No sentences available for the subject: {self.selected_subject}")
-            self.root = None # Mark as failed to initialize
-            return
-
-        self.target_sentence = ""
+    def __init__(self, root):
         self.root = root
-        self.root.title(f"{self.user_name}'s Typing Test - {self.selected_subject}")
-        self.root.geometry("900x700") # Increased height to ensure button visibility
+        self.root.title("Typing Test App")
+        self.root.geometry("900x700")
         self.root.resizable(False, False)
         
-        # Color variables for character coloring (initialized with defaults)
+        # Load all data upfront
+        self.all_sentences = load_sentences()
+        self.subjects = list(self.all_sentences.keys())
+        
+        # Check if any data exists
+        if not self.subjects:
+            messagebox.showerror("Error", "No subjects or sentences found in sample.txt!")
+            self.root.destroy()
+            return
+
+        # State variables for user info (initialized in setup_login_ui)
+        self.user_name = None
+        self.selected_subject = None
+        self.sentences = {}
+        
+        # Test state variables
+        self.target_sentence = ""
+        self.start_time = None
+        self.start_timer_binding = None
+        
+        # Theme variables
+        self.theme_var = tk.StringVar(value="light")
         self.correct_color = "#1E8449" 
         self.incorrect_color = "#C0392B"
 
-        # Configure root grid
+        # Start by setting up the login screen
+        self.setup_login_ui()
+        # Apply the default theme to the root window (important for the login screen background)
+        self.apply_theme() 
+
+    def setup_login_ui(self):
+        """Creates and displays the login input elements on the main window."""
+        
+        # Configure root grid for the login frame to be centered
+        self.root.grid_rowconfigure(0, weight=1) 
+        self.root.grid_rowconfigure(1, weight=1) 
+        self.root.grid_columnconfigure(0, weight=1)
+        
+        # Create a central frame for the login UI
+        self.login_frame = ttk.Frame(self.root, padding="40 40 40 40")
+        self.login_frame.grid(row=0, column=0, sticky="nsew", rowspan=2, columnspan=1)
+        
+        # Center contents within the login frame
+        self.login_frame.grid_columnconfigure(0, weight=1)
+        self.login_frame.grid_rowconfigure(0, weight=1)
+        self.login_frame.grid_rowconfigure(5, weight=1)
+        
+        login_inner_frame = ttk.Frame(self.login_frame)
+        login_inner_frame.grid(row=1, column=0)
+        
+        # Variables to hold user input
+        self.user_name_var = tk.StringVar(value="")
+        self.selected_subject_var = tk.StringVar(value=self.subjects[0])
+        
+        # 1. Title
+        ttk.Label(login_inner_frame, text="Welcome to the Typing Test", font=("Arial", 16, "bold")).pack(pady=20)
+
+        # 2. Name Input
+        ttk.Label(login_inner_frame, text="Enter Your Name:", font=("Arial", 12, "bold")).pack(pady=5, anchor="w")
+        name_entry = ttk.Entry(login_inner_frame, textvariable=self.user_name_var, width=30, font=("Arial", 12))
+        name_entry.pack(pady=5)
+        name_entry.focus_set()
+
+        # 3. Subject Selection
+        ttk.Label(login_inner_frame, text="Choose Subject:", font=("Arial", 12, "bold")).pack(pady=5, anchor="w")
+        subject_menu = ttk.Combobox(login_inner_frame, textvariable=self.selected_subject_var,
+                                    values=self.subjects, state="readonly", width=28,
+                                    font=("Arial", 12))
+        subject_menu.pack(pady=5)
+        subject_menu.set(self.subjects[0])
+
+        # 4. Start Button
+        ttk.Button(login_inner_frame, text="Continue to Test", command=self.start_test_app, 
+                   style="Black.TButton").pack(pady=20, ipadx=10, ipady=5)
+
+    def start_test_app(self):
+        """Validates login details and transitions the UI to the main test view."""
+        
+        name = self.user_name_var.get().strip()
+        if not name:
+            messagebox.showerror("Error", "Please enter your name.")
+            return
+
+        self.user_name = name
+        self.selected_subject = self.selected_subject_var.get()
+        self.sentences = self.all_sentences.get(self.selected_subject, {})
+
+        if not any(self.sentences.values()):
+            messagebox.showerror("Error", f"No sentences available for the subject: {self.selected_subject}")
+            return
+
+        # Destroy the login UI
+        self.login_frame.destroy()
+        
+        # Update the main window title
+        self.root.title(f"{self.user_name}'s Typing Test - {self.selected_subject}")
+
+        # Reconfigure root grid for the main test UI
         self.root.grid_rowconfigure(0, weight=0) # Top Bar
         self.root.grid_rowconfigure(1, weight=1) # Main Content (text boxes)
         self.root.grid_rowconfigure(2, weight=0) # Bottom Bar
         self.root.grid_columnconfigure(0, weight=1)
-
-        self.start_time = None
-        self.theme_var = tk.StringVar(value="light")
         
-        self.setup_ui()
+        # Setup and initialize the main test UI
+        self.setup_test_ui()
         self.apply_theme()
+        
+        # Initial binding setup (can only be done after input_box is created)
+        if hasattr(self, 'input_box'):
+            self.start_timer_binding = self.input_box.bind("<KeyPress>", self.start_timer)
 
-    def setup_ui(self):
+
+    def setup_test_ui(self):
+        """Creates the main typing test interface elements."""
         
         # --- Top Bar ---
         self.top_bar = tk.Frame(self.root)
@@ -215,7 +239,6 @@ class TypingTestApp:
         self.dark_button.pack(side="left", padx=5)
 
         # Difficulty Menu (Center)
-        # Difficulty values are now based on the keys of the filtered sentences: EASY, MEDIUM, HARD
         self.difficulty_levels = ["EASY", "MEDIUM", "HARD"]
         self.difficulty_var = tk.StringVar(value="EASY")
         self.difficulty_menu = ttk.Combobox(self.top_bar, textvariable=self.difficulty_var,
@@ -239,8 +262,7 @@ class TypingTestApp:
         self.sentence_box.config(state="disabled")
         
         self.input_box = create_rounded_textbox(self.main_content, bg="#ffffff")
-        self.input_box.bind("<KeyPress>", self.start_timer)
-        self.input_box.bind("<KeyRelease>", self.check_completion) 
+        # Bindings are set in start_test_app() now
 
         # --- Bottom Bar ---
         self.bottom_bar = tk.Frame(self.root)
@@ -276,8 +298,12 @@ class TypingTestApp:
         # Apply root background
         self.root.configure(bg=bg_color)
         
-        # Style all frames
-        for frame in [self.top_bar, self.main_content, self.bottom_bar, self.theme_frame, self.wpm_frame]:
+        # Style all frames (Login frame might exist)
+        frames_to_style = [self.login_frame] if hasattr(self, 'login_frame') and self.login_frame.winfo_exists() else []
+        if hasattr(self, 'top_bar'):
+            frames_to_style.extend([self.top_bar, self.main_content, self.bottom_bar, self.theme_frame, self.wpm_frame])
+        
+        for frame in frames_to_style:
             frame.configure(bg=bg_color)
 
         # Style ttk widgets
@@ -301,14 +327,14 @@ class TypingTestApp:
                         ('selected', inv_fg_color)]
         )
 
-        # Difficulty Combobox
+        # Comboboxes
         style.configure("Black.TCombobox",
                         fieldbackground=inv_bg_color,
                         foreground=inv_fg_color,
                         background=inv_bg_color,
                         arrowcolor=inv_fg_color,
-                        selectbackground=inv_bg_color, # Dropdown list bg
-                        selectforeground=inv_fg_color, # Dropdown list fg
+                        selectbackground=inv_bg_color, 
+                        selectforeground=inv_fg_color, 
                         bordercolor=inv_bg_color,
                         lightcolor=inv_bg_color,
                         darkcolor=inv_bg_color)
@@ -318,14 +344,15 @@ class TypingTestApp:
                   selectbackground=[('readonly', inv_bg_color)],
                   selectforeground=[('readonly', inv_fg_color)])
 
-        # WPM Labels
-        style.configure("WPM.TLabel",
-                        background=inv_bg_color,
-                        foreground=inv_fg_color,
-                        padding=(10, 5))
-        self.wpm_frame.configure(bg=inv_bg_color) # Configure the frame itself
+        # WPM Labels (Only if test UI exists)
+        if hasattr(self, 'wpm_frame') and self.wpm_frame.winfo_exists():
+            style.configure("WPM.TLabel",
+                            background=inv_bg_color,
+                            foreground=inv_fg_color,
+                            padding=(10, 5))
+            self.wpm_frame.configure(bg=inv_bg_color) 
 
-        # Start Button
+        # Buttons (Used for Login and Start Test)
         style.configure("Black.TButton",
                         background=inv_bg_color,
                         foreground=inv_fg_color,
@@ -338,31 +365,28 @@ class TypingTestApp:
             foreground=[('active', fg_color)]
         )
 
-        # Find the text widgets inside the canvases
-        for canvas in [self.sentence_box.master, self.input_box.master]:
-            canvas.config(bg=bg_color) # Set canvas bg (transparent)
-            
-            # Find the text widget
-            text_widget = canvas.winfo_children()[0] # Assumes text is first child
-            text_widget.config(bg=text_bg_color, fg=fg_color, 
-                               insertbackground=fg_color) # Set text bg, fg, and cursor color
-            
-            # Redraw rounded rects with new text_bg_color
-            items = canvas.find_all()
-            for item in items:
-                # Only re-color the drawn arc and rectangle shapes (our background)
-                if canvas.type(item) in ["arc", "rectangle"]:
-                    canvas.itemconfig(item, fill=text_bg_color, outline=text_bg_color)
-                    
-        # Configure the text tags for coloring *after* the input_box exists
+        # Text Boxes (Only if test UI exists)
         if hasattr(self, 'input_box'):
+            for canvas in [self.sentence_box.master, self.input_box.master]:
+                canvas.config(bg=bg_color) 
+                
+                # Find the text widget
+                text_widget = canvas.winfo_children()[0] 
+                text_widget.config(bg=text_bg_color, fg=fg_color, 
+                                   insertbackground=fg_color)
+                
+                # Redraw rounded rects with new text_bg_color
+                items = canvas.find_all()
+                for item in items:
+                    if canvas.type(item) in ["arc", "rectangle"]:
+                        canvas.itemconfig(item, fill=text_bg_color, outline=text_bg_color)
+                        
+            # Configure the text tags for coloring
             text_widget = self.input_box.master.winfo_children()[0]
-            # Clear existing tags first (important for theme switching)
             text_widget.tag_delete("correct")
             text_widget.tag_delete("incorrect")
             text_widget.tag_delete("extra")
             
-            # Configure new tags
             text_widget.tag_config("correct", foreground=self.correct_color)
             text_widget.tag_config("incorrect", foreground=self.incorrect_color)
             text_widget.tag_config("extra", foreground=self.extra_color)
@@ -398,9 +422,12 @@ class TypingTestApp:
         text_widget.tag_remove("incorrect", "1.0", tk.END)
         text_widget.tag_remove("extra", "1.0", tk.END)
 
-
         # Re-bind start_timer in case it was unbound
-        self.start_timer_binding = self.input_box.bind("<KeyPress>", self.start_timer)
+        # Note: Binds KeyPress and KeyRelease to the Text widget *inside* the canvas
+        text_widget.bind("<KeyPress>", self.start_timer)
+        text_widget.bind("<KeyRelease>", self.check_completion)
+        self.start_timer_binding = text_widget.bind("<KeyPress>", self.start_timer)
+
 
     def start_timer(self, event):
         # Start timer only if it hasn't started and there's a target sentence
@@ -412,8 +439,9 @@ class TypingTestApp:
             # Check if it's a printable character or backspace/delete
             if len(event.char) > 0 or event.keysym in ("BackSpace", "Delete"):
                 self.start_time = time.time()
+                text_widget = self.input_box.master.winfo_children()[0]
                 # Unbind this so it doesn't fire again
-                self.input_box.unbind("<KeyPress>", self.start_timer_binding)
+                text_widget.unbind("<KeyPress>", self.start_timer_binding)
                 self.start_timer_binding = None # Clear the reference
 
     def check_completion(self, event):
@@ -433,6 +461,7 @@ class TypingTestApp:
         text_widget.tag_remove("extra", "1.0", tk.END)
 
         # 2. Apply coloring and calculate errors live
+        error_count = 0
         for i, char in enumerate(user_text):
             start_index = f"1.{i}"
             end_index = f"1.{i+1}"
@@ -444,6 +473,7 @@ class TypingTestApp:
                 else:
                     # Incorrect character
                     text_widget.tag_add("incorrect", start_index, end_index)
+                    error_count += 1
             else:
                 # Extra characters typed beyond the target sentence length
                 text_widget.tag_add("extra", start_index, end_index)
@@ -454,11 +484,11 @@ class TypingTestApp:
             if time_elapsed > 1: # Only update WPM after 1 second
                 # WPM based on characters typed (CPM / 5)
                 cpm = (user_text_len / time_elapsed) * 60
-                live_wpm = cpm / 5
+                live_wpm = max(0, (cpm / 5) - (error_count / 5)) # Gross WPM - penalty
                 self.wpm_value_label.config(text=f"{live_wpm:.0f}")
 
         # --- Completion Check ---
-        if user_text_len >= target_len:
+        if user_text_len >= target_len and event.keysym not in ("BackSpace", "Delete"):
             self.input_box.config(state="disabled") # Stop typing
             # Truncate user text to match target length for calculation
             final_typed_text = user_text[:target_len]
@@ -475,21 +505,29 @@ class TypingTestApp:
             if i < len(target) and char != target[i]:
                 error_count += 1
         
-        # 2. Calculate Final WPM (using typed words)
-        # Use target sentence word count for standard calculation
-        words = len(self.target_sentence.split()) 
-        if time_taken < 0.1: 
-            time_taken = 0.1
-            
-        wpm = (words / time_taken) * 60
+        # 2. Calculate Final WPM (Net WPM)
+        words = len(self.target_sentence.split())
         
+        # Gross WPM (Words / Time in minutes)
+        gross_wpm = (words / time_taken) * 60
+        
+        # Net WPM (Gross WPM - (Errors / Time in minutes))
+        # Assuming one word is 5 characters, one error is 1 word WPM penalty
+        error_penalty_wpm = error_count / 5
+        net_wpm = max(0, gross_wpm - error_penalty_wpm)
+
+        if time_taken < 0.1: 
+            net_wpm = 0.0 # Prevent division by near-zero
+
         # 3. Update UI and Show Popup
-        self.wpm_value_label.config(text=f"{wpm:.0f}")
+        self.wpm_value_label.config(text=f"{net_wpm:.0f}")
         
         messagebox.showinfo("Test Complete!", 
                             f"**User: {self.user_name}**\n"
                             f"**Subject: {self.selected_subject}**\n\n"
-                            f"Final WPM: {wpm:.0f}\n"
+                            f"Time Taken: {time_taken:.2f} seconds\n"
+                            f"Gross WPM: {gross_wpm:.0f}\n"
+                            f"Net WPM: {net_wpm:.0f}\n"
                             f"Character Errors: {error_count}")
         
         self.start_button.config(text="Start Test")
@@ -497,23 +535,5 @@ class TypingTestApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    
-    # 1. Load subjects first to populate the login screen
-    all_sentences = load_sentences()
-    subjects = list(all_sentences.keys())
-
-    # 2. Show login screen to get user info
-    user_info = show_login_screen(root, subjects)
-
-    # 3. Proceed to the main app if valid info was gathered
-    if user_info['name'] and user_info['subject']:
-        app = TypingTestApp(root, user_info)
-        
-        # Initial binding reference (needs to be set after app initialization)
-        if hasattr(app, 'input_box'):
-            # Initial binding reference is saved to allow unbinding later
-            app.start_timer_binding = app.input_box.bind("<KeyPress>", app.start_timer)
-        
-        root.mainloop()
-    else:
-        root.destroy()
+    app = TypingTestApp(root)
+    root.mainloop()
