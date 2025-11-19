@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import time
 import random
+import os # Import os for robust path handling
 
 # -----------------------------
 # Load and Structure Sentences
@@ -25,8 +26,16 @@ def load_sentences(file_path="sample.txt"):
     current_subject = None
     current_level = None
 
+    # --- FIX: Ensure file path is relative to the script location ---
+    # Get the directory of the current script (typing_test.py)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construct the full path to the sample.txt file
+    full_path = os.path.join(script_dir, file_path)
+    # -----------------------------------------------------------------
+
     try:
-        with open(file_path, "r", encoding="utf-8") as file:
+        # Use the full_path when opening the file
+        with open(full_path, "r", encoding="utf-8") as file:
             for line in file:
                 line = line.strip()
                 if not line:
@@ -54,7 +63,8 @@ def load_sentences(file_path="sample.txt"):
                             all_subjects[current_subject][current_level].append(sentence + '.')
 
     except FileNotFoundError:
-        messagebox.showerror("Error", "sample.txt not found!")
+        # Show specific error mentioning the path it was looking for
+        messagebox.showerror("Error", f"File not found! Expected path: {full_path}")
     except Exception as e:
         messagebox.showerror("Error", f"Error processing sample.txt: {e}")
 
@@ -114,7 +124,7 @@ class TypingTestApp:
         
         # Check if any data exists
         if not self.subjects:
-            messagebox.showerror("Error", "No subjects or sentences found in sample.txt!")
+            # We already displayed an error in load_sentences, just destroy
             self.root.destroy()
             return
 
@@ -217,7 +227,9 @@ class TypingTestApp:
         
         # Initial binding setup (can only be done after input_box is created)
         if hasattr(self, 'input_box'):
-            self.start_timer_binding = self.input_box.bind("<KeyPress>", self.start_timer)
+            # The actual text widget is the first child of the canvas
+            text_widget = self.input_box.master.winfo_children()[0]
+            self.start_timer_binding = text_widget.bind("<KeyPress>", self.start_timer)
 
 
     def setup_test_ui(self):
@@ -441,7 +453,8 @@ class TypingTestApp:
                 self.start_time = time.time()
                 text_widget = self.input_box.master.winfo_children()[0]
                 # Unbind this so it doesn't fire again
-                text_widget.unbind("<KeyPress>", self.start_timer_binding)
+                if self.start_timer_binding:
+                    text_widget.unbind("<KeyPress>", self.start_timer_binding)
                 self.start_timer_binding = None # Clear the reference
 
     def check_completion(self, event):
@@ -488,11 +501,17 @@ class TypingTestApp:
                 self.wpm_value_label.config(text=f"{live_wpm:.0f}")
 
         # --- Completion Check ---
+        # Completion triggers when the user types a character that exceeds the target length
+        # AND it's not a backspace/delete action.
         if user_text_len >= target_len and event.keysym not in ("BackSpace", "Delete"):
             self.input_box.config(state="disabled") # Stop typing
             # Truncate user text to match target length for calculation
             final_typed_text = user_text[:target_len]
             time_taken = time.time() - self.start_time
+            
+            # Unbind the KeyRelease event to prevent multiple calculation calls
+            text_widget.unbind("<KeyRelease>")
+            
             self.calculate_results(final_typed_text, time_taken)
 
     def calculate_results(self, typed_text, time_taken):
