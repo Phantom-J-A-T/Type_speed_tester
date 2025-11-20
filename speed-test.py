@@ -4,6 +4,7 @@ Typing Speed Test App using Tkinter
 - Modern UI layout
 - Rounded typing input boxes (simulated using Canvas)
 - Starts directly into the test interface, filtering sentences only by difficulty (Easy/Medium/Hard).
+- Implements a fixed 5-minute (300 seconds) timer for the test duration.
 """
 
 import tkinter as tk
@@ -11,6 +12,9 @@ from tkinter import ttk, messagebox
 import time
 import random
 import os
+
+# Define the fixed test duration in seconds (5 minutes)
+TEST_DURATION_SECONDS = 300
 
 # -----------------------------
 # Load and Structure Sentences
@@ -65,25 +69,19 @@ def load_sentences(file_path="sample.txt"):
     return all_sentences
 
 # -----------------------------
-# Rounded Entry / Text creators (Same as before)
+# Rounded Entry / Text creators
 # -----------------------------
 
 def create_rounded_textbox(parent, width=80, height=6, bg="#ffffff", radius=25):
-    # Remove bg=bg from canvas creation to allow parent bg to show
     canvas = tk.Canvas(parent, highlightthickness=0)
-    # Use grid instead of pack for more control
     canvas.grid(pady=10, padx=20, sticky="nsew")
 
-    # Adjust dimensions for the canvas based on text widget size
-    # Increased padding (120) to give more margin around the text widget (padx=20, pady=20)
-    w = (width * 8) + 120 # Approx width in pixels + larger padding
-    h = (height * 18) + 120 # Approx height in pixels + larger padding
+    w = (width * 8) + 120 
+    h = (height * 18) + 120 
     
-    # Configure canvas size
     canvas.config(width=w, height=h)
 
     # Rounded box drawing
-    # Use the bg color for both fill and outline to blend
     canvas.create_arc((0, 0, radius*2, radius*2), start=90, extent=90, fill=bg, outline=bg)
     canvas.create_arc((w - radius*2, 0, w, radius*2), start=0, extent=90, fill=bg, outline=bg)
     canvas.create_arc((0, h - radius*2, radius*2, h), start=180, extent=90, fill=bg, outline=bg)
@@ -93,16 +91,14 @@ def create_rounded_textbox(parent, width=80, height=6, bg="#ffffff", radius=25):
     canvas.create_rectangle((radius, 0, w - radius, h), fill=bg, outline=bg)
     canvas.create_rectangle((0, radius, w, h - radius), fill=bg, outline=bg)
 
-    # Note: Text widget has internal padding (padx=20, pady=20)
     text_widget = tk.Text(canvas, width=width, height=height, bg=bg, bd=0, highlightthickness=0, font=("Arial", 12), wrap="word", relief="flat", padx=20, pady=20)
     
-    # Place text widget centered inside the canvas
     canvas.create_window(w/2, h/2, window=text_widget)
 
     return text_widget
 
 # -----------------------------
-# Main App Class (Refactored)
+# Main App Class
 # -----------------------------
 
 class TypingTestApp:
@@ -115,7 +111,6 @@ class TypingTestApp:
         # Load all data upfront (only by difficulty now)
         self.all_sentences = load_sentences()
         
-        # Check if any data exists
         if not any(self.all_sentences.values()):
             self.root.destroy()
             return
@@ -123,26 +118,22 @@ class TypingTestApp:
         # Test state variables
         self.target_sentence = ""
         self.start_time = None
+        self.timer_id = None # Reference to the scheduled timer function
         self.start_timer_binding = None
+        self.is_running = False # Flag to track if the test is active
         
         # Theme variables
         self.theme_var = tk.StringVar(value="light")
         self.correct_color = "#1E8449" 
         self.incorrect_color = "#C0392B"
 
-        # Start directly in the test view
         self.setup_test_ui()
         self.apply_theme()
         
-        # Initial binding setup (after UI creation)
         if hasattr(self, 'input_box'):
             text_widget = self.input_box.master.winfo_children()[0]
-            self.start_timer_binding = text_widget.bind("<KeyPress>", self.start_timer)
-            self.root.title("Typing Test App - Ready") # Set a default title
-
-
-    # Login UI setup and start_test_app removed
-    # setup_test_ui is now the starting point for the main view
+            self.start_timer_binding = text_widget.bind("<KeyPress>", self._start_timer_on_key)
+            self.root.title("Typing Test App - Ready")
 
     def setup_test_ui(self):
         """Creates the main typing test interface elements."""
@@ -156,9 +147,9 @@ class TypingTestApp:
         # --- Top Bar ---
         self.top_bar = tk.Frame(self.root)
         self.top_bar.grid(row=0, column=0, sticky="nsew", pady=10, padx=20)
-        self.top_bar.grid_columnconfigure(0, weight=1)
-        self.top_bar.grid_columnconfigure(1, weight=1)
-        self.top_bar.grid_columnconfigure(2, weight=1)
+        self.top_bar.grid_columnconfigure(0, weight=1) # Theme
+        self.top_bar.grid_columnconfigure(1, weight=1) # Difficulty/Timer
+        self.top_bar.grid_columnconfigure(2, weight=1) # WPM
 
         # Theme Toggle (Left)
         self.theme_frame = tk.Frame(self.top_bar)
@@ -168,13 +159,21 @@ class TypingTestApp:
         self.light_button.pack(side="left", padx=5)
         self.dark_button.pack(side="left", padx=5)
 
-        # Difficulty Menu (Center)
+        # Difficulty and Timer Frame (Center)
+        self.center_frame = tk.Frame(self.top_bar)
+        self.center_frame.grid(row=0, column=1, sticky="n")
+
+        # Difficulty Menu
         self.difficulty_levels = ["EASY", "MEDIUM", "HARD"]
         self.difficulty_var = tk.StringVar(value="EASY")
-        self.difficulty_menu = ttk.Combobox(self.top_bar, textvariable=self.difficulty_var,
+        self.difficulty_menu = ttk.Combobox(self.center_frame, textvariable=self.difficulty_var,
                                             values=self.difficulty_levels, state="readonly", width=15,
                                             font=("Arial", 12, "bold"), style="Black.TCombobox")
-        self.difficulty_menu.grid(row=0, column=1, sticky="n")
+        self.difficulty_menu.pack(pady=5) # pack inside center_frame
+
+        # Timer Label (Below Difficulty)
+        self.timer_label = ttk.Label(self.center_frame, text="Time: 5:00", font=("Arial", 14, "bold"), style="WPM.TLabel")
+        self.timer_label.pack(pady=5)
 
         # WPM Box (Right)
         self.wpm_frame = tk.Frame(self.top_bar)
@@ -199,50 +198,42 @@ class TypingTestApp:
         self.bottom_bar.grid_columnconfigure(0, weight=1)
 
         self.start_button = ttk.Button(self.bottom_bar, text="Start Test", command=self.start_test, style="Black.TButton")
-        self.start_button.grid(row=0, column=0) # Centered by default in single-column grid
+        self.start_button.grid(row=0, column=0) 
 
 
     def apply_theme(self):
         theme = self.theme_var.get()
         
-        # Theme colors
         bg_color = "#F0F0F0" if theme == "light" else "#333333"
         text_bg_color = "#FFFFFF" if theme == "light" else "#555555"
         fg_color = "#000000" if theme == "light" else "#FFFFFF"
         
-        # Colors for inverted elements (black boxes in light mode)
         inv_bg_color = "#222222" if theme == "light" else "#DDDDDD"
         inv_fg_color = "#FFFFFF" if theme == "light" else "#000000"
         
-        # Colors for character coloring
         if theme == "light":
-            self.correct_color = "#1E8449"  # Darker green on light background
-            self.incorrect_color = "#C0392B" # Darker red on light background
-            self.extra_color = "#888888" # Gray
+            self.correct_color = "#1E8449"  
+            self.incorrect_color = "#C0392B" 
+            self.extra_color = "#888888" 
         else:
-            self.correct_color = "#34eb55"  # Brighter green on dark background
-            self.incorrect_color = "#FF4500" # Orange/Red for contrast on dark background
-            self.extra_color = "#AAAAAA" # Light Gray
+            self.correct_color = "#34eb55"  
+            self.incorrect_color = "#FF4500" 
+            self.extra_color = "#AAAAAA" 
 
-        # Apply root background
         self.root.configure(bg=bg_color)
         
-        # Style all frames 
         frames_to_style = []
         if hasattr(self, 'top_bar'):
-            frames_to_style.extend([self.top_bar, self.main_content, self.bottom_bar, self.theme_frame, self.wpm_frame])
+            frames_to_style.extend([self.top_bar, self.main_content, self.bottom_bar, self.theme_frame, self.wpm_frame, self.center_frame])
         
         for frame in frames_to_style:
             frame.configure(bg=bg_color)
 
-        # Style ttk widgets
         style = ttk.Style()
-        style.theme_use('clam') # Use a theme that allows configuration
+        style.theme_use('clam') 
 
-        # General Label
         style.configure("TLabel", background=bg_color, foreground=fg_color, font=("Arial", 12))
 
-        # Theme Radiobuttons (styled to look like buttons)
         style.configure("Theme.TRadiobutton",
                         background=bg_color,
                         foreground=fg_color,
@@ -256,7 +247,6 @@ class TypingTestApp:
                         ('selected', inv_fg_color)]
         )
 
-        # Comboboxes
         style.configure("Black.TCombobox",
                         fieldbackground=inv_bg_color,
                         foreground=inv_fg_color,
@@ -273,15 +263,15 @@ class TypingTestApp:
                   selectbackground=[('readonly', inv_bg_color)],
                   selectforeground=[('readonly', inv_fg_color)])
 
-        # WPM Labels
         if hasattr(self, 'wpm_frame') and self.wpm_frame.winfo_exists():
+            # Apply WPM style to both WPM frame and Timer label
             style.configure("WPM.TLabel",
                             background=inv_bg_color,
                             foreground=inv_fg_color,
                             padding=(10, 5))
-            self.wpm_frame.configure(bg=inv_bg_color) 
+            self.wpm_frame.configure(bg=inv_bg_color)
+            self.timer_label.configure(style="WPM.TLabel", background=inv_bg_color) # Ensure timer label gets styled correctly
 
-        # Buttons (Used for Login and Start Test)
         style.configure("Black.TButton",
                         background=inv_bg_color,
                         foreground=inv_fg_color,
@@ -294,23 +284,19 @@ class TypingTestApp:
             foreground=[('active', fg_color)]
         )
 
-        # Text Boxes
         if hasattr(self, 'input_box'):
             for canvas in [self.sentence_box.master, self.input_box.master]:
                 canvas.config(bg=bg_color) 
                 
-                # Find the text widget
                 text_widget = canvas.winfo_children()[0] 
                 text_widget.config(bg=text_bg_color, fg=fg_color, 
                                    insertbackground=fg_color)
                 
-                # Redraw rounded rects with new text_bg_color
                 items = canvas.find_all()
                 for item in items:
                     if canvas.type(item) in ["arc", "rectangle"]:
                         canvas.itemconfig(item, fill=text_bg_color, outline=text_bg_color)
                         
-            # Configure the text tags for coloring
             text_widget = self.input_box.master.winfo_children()[0]
             text_widget.tag_delete("correct")
             text_widget.tag_delete("incorrect")
@@ -322,9 +308,12 @@ class TypingTestApp:
 
 
     def start_test(self):
+        # Stop any existing timer or process before starting a new one
+        self.stop_timer() 
+        self.is_running = False
+
         difficulty = self.difficulty_var.get()
         
-        # Check if the sentence list for the current difficulty is valid and not empty
         if difficulty not in self.all_sentences or not self.all_sentences[difficulty]:
             messagebox.showerror("Error", f"No sentences available for difficulty: {difficulty}!")
             return
@@ -333,53 +322,97 @@ class TypingTestApp:
         self.sentence_len = len(self.target_sentence)
         text_widget = self.input_box.master.winfo_children()[0]
         
+        # Display target sentence
         self.sentence_box.config(state="normal")
         self.sentence_box.delete("1.0", tk.END)
         self.sentence_box.insert(tk.END, self.target_sentence)
         self.sentence_box.config(state="disabled")
 
+        # Prepare input box
         self.input_box.config(state="normal")
         self.input_box.delete("1.0", tk.END)
-        self.input_box.focus_set() # Automatically focus the input box
+        self.input_box.focus_set() 
+        
+        # Reset visual state
         self.start_time = None
-        self.wpm_value_label.config(text="0") # Reset WPM counter
+        self.wpm_value_label.config(text="0") 
+        self.timer_label.config(text=f"Time: {TEST_DURATION_SECONDS // 60}:00")
         self.start_button.config(text="Reset Test")
         
-        # Clear tags at the start of a new test
+        # Clear tags
         text_widget.tag_remove("correct", "1.0", tk.END)
         text_widget.tag_remove("incorrect", "1.0", tk.END)
         text_widget.tag_remove("extra", "1.0", tk.END)
 
-        # Re-bind start_timer in case it was unbound
-        text_widget.bind("<KeyPress>", self.start_timer)
-        text_widget.bind("<KeyRelease>", self.check_completion)
-        self.start_timer_binding = text_widget.bind("<KeyPress>", self.start_timer)
+        # Re-bind only the key listener to START the timer
+        text_widget.bind("<KeyPress>", self._start_timer_on_key)
+        # Bind the key release for live WPM/coloring, but it will be guarded by self.is_running
+        text_widget.bind("<KeyRelease>", self._key_release_handler)
+        self.start_timer_binding = text_widget.bind("<KeyPress>", self._start_timer_on_key)
         
         self.root.title(f"Typing Test App - {difficulty}")
 
-
-    def start_timer(self, event):
-        # Start timer only if it hasn't started and there's a target sentence
+    def _start_timer_on_key(self, event):
+        """Starts the timer and unbinds itself on the first relevant key press."""
+        # Check if it's a key we should care about (i.e., not just a modifier key)
+        if event.keysym in ("Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R", "Caps_Lock", "Num_Lock", "Scroll_Lock", "Super_L", "Super_R", "Tab", "Up", "Down", "Left", "Right"):
+            return
+        
         if self.start_time is None and self.target_sentence:
-            # Ignore modifier keys (heuristic check)
-            if event.keysym in ("Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R", "Caps_Lock", "Num_Lock", "Scroll_Lock", "Super_L", "Super_R", "Tab", "Up", "Down", "Left", "Right"):
-                return
+            self.start_time = time.time()
+            self.is_running = True
+            self.update_timer() # Start the recurring timer update
             
-            # Check if it's a printable character or backspace/delete
-            if len(event.char) > 0 or event.keysym in ("BackSpace", "Delete"):
-                self.start_time = time.time()
-                text_widget = self.input_box.master.winfo_children()[0]
-                # Unbind this so it doesn't fire again
-                if self.start_timer_binding:
-                    text_widget.unbind("<KeyPress>", self.start_timer_binding)
-                self.start_timer_binding = None # Clear the reference
+            # Unbind this startup function
+            text_widget = self.input_box.master.winfo_children()[0]
+            if self.start_timer_binding:
+                text_widget.unbind("<KeyPress>", self.start_timer_binding)
+            self.start_timer_binding = None
 
-    def check_completion(self, event):
-        if not self.target_sentence or self.start_time is None:
+
+    def update_timer(self):
+        """Updates the timer label and checks for time expiry."""
+        if not self.is_running:
+            return
+
+        time_elapsed = time.time() - self.start_time
+        time_remaining = TEST_DURATION_SECONDS - time_elapsed
+
+        if time_remaining <= 0:
+            self.end_test(time_taken=TEST_DURATION_SECONDS)
+            return
+
+        # Format and update the timer display
+        minutes = int(time_remaining // 60)
+        seconds = int(time_remaining % 60)
+        self.timer_label.config(text=f"Time: {minutes:01d}:{seconds:02d}")
+
+        # Schedule the next update in 1 second
+        self.timer_id = self.root.after(1000, self.update_timer)
+
+
+    def stop_timer(self):
+        """Cancels the scheduled timer updates."""
+        if self.timer_id:
+            self.root.after_cancel(self.timer_id)
+            self.timer_id = None
+            
+        # Ensure the test is marked as stopped
+        self.is_running = False
+        self.start_time = None
+        text_widget = self.input_box.master.winfo_children()[0]
+        text_widget.unbind("<KeyRelease>")
+        
+        # Reset the timer label visually
+        self.timer_label.config(text=f"Time: {TEST_DURATION_SECONDS // 60}:00")
+
+
+    def _key_release_handler(self, event):
+        """Called on every key release to check live WPM, coloring, and sentence completion."""
+        if not self.is_running or not self.target_sentence:
             return
 
         text_widget = self.input_box.master.winfo_children()[0]
-        # Get text without the trailing newline character
         user_text = text_widget.get("1.0", tk.END + "-1c")
         user_text_len = len(user_text)
         target_len = self.sentence_len
@@ -398,70 +431,74 @@ class TypingTestApp:
             
             if i < target_len:
                 if char == target[i]:
-                    # Correct character
                     text_widget.tag_add("correct", start_index, end_index)
                 else:
-                    # Incorrect character
                     text_widget.tag_add("incorrect", start_index, end_index)
                     error_count += 1
             else:
-                # Extra characters typed beyond the target sentence length
                 text_widget.tag_add("extra", start_index, end_index)
 
         # --- Live WPM Update ---
         if user_text_len > 0:
             time_elapsed = time.time() - self.start_time
-            if time_elapsed > 1: # Only update WPM after 1 second
+            if time_elapsed > 1:
                 # WPM based on characters typed (CPM / 5)
                 cpm = (user_text_len / time_elapsed) * 60
-                live_wpm = max(0, (cpm / 5) - (error_count / 5)) # Gross WPM - penalty
+                # Using a fixed 5-minute time frame for WPM calculation is not accurate for short bursts,
+                # so we stick to the traditional live WPM formula until the end of the test.
+                live_wpm = max(0, (cpm / 5) - (error_count / 5)) 
                 self.wpm_value_label.config(text=f"{live_wpm:.0f}")
 
-        # --- Completion Check ---
-        # Completion triggers when the user types a character that exceeds the target length
-        # AND it's not a backspace/delete action.
-        if user_text_len >= target_len and event.keysym not in ("BackSpace", "Delete"):
-            self.input_box.config(state="disabled") # Stop typing
-            # Truncate user text to match target length for calculation
-            final_typed_text = user_text[:target_len]
+        # --- Manual Sentence Completion Check (Optional End) ---
+        # The user has successfully typed the entire required sentence
+        if user_text == target:
             time_taken = time.time() - self.start_time
-            
-            # Unbind the KeyRelease event to prevent multiple calculation calls
-            text_widget.unbind("<KeyRelease>")
-            
-            self.calculate_results(final_typed_text, time_taken)
+            self.end_test(time_taken=time_taken, reason="Sentence Completed")
 
-    def calculate_results(self, typed_text, time_taken):
+
+    def end_test(self, time_taken, reason="Time Expired"):
+        """Finalizes the test, calculates results, and shows the popup."""
+        
+        # Stop all processes and input
+        self.stop_timer()
+        self.input_box.config(state="disabled") 
+        self.is_running = False
+
+        text_widget = self.input_box.master.winfo_children()[0]
+        # Get the text actually typed *within* the required sentence length
+        final_typed_text = text_widget.get("1.0", f"1.{self.sentence_len}")
+        
         # 1. Calculate Errors
         error_count = 0
         target = self.target_sentence
         
-        # Compare characters up to the length of the typed text
-        for i, char in enumerate(typed_text):
+        for i, char in enumerate(final_typed_text):
             if i < len(target) and char != target[i]:
                 error_count += 1
         
         # 2. Calculate Final WPM (Net WPM)
-        # Using character count instead of splitting by space for more accuracy with varied difficulty
-        total_typed_chars = len(target)
+        # Net WPM must be calculated based on the total time of the test run.
+        # Net WPM = (Total Correct Characters / 5 - Errors) / Time (in minutes)
         
-        # Net WPM (Gross CPM / 5) - Penalty
-        net_cpm = (total_typed_chars / time_taken) * 60
-        # Penalty: one character error = 1 WPM penalty
-        error_penalty_wpm = error_count / 5
-        net_wpm = max(0, (net_cpm / 5) - error_penalty_wpm)
-
-        if time_taken < 0.1: 
-            net_wpm = 0.0 # Prevent division by near-zero
+        total_correct_chars = len(final_typed_text) - error_count
+        time_in_minutes = time_taken / 60
+        
+        if time_in_minutes > 0:
+            net_wpm = max(0, (total_correct_chars / 5) / time_in_minutes)
+        else:
+            net_wpm = 0.0
 
         # 3. Update UI and Show Popup
         self.wpm_value_label.config(text=f"{net_wpm:.0f}")
         
         difficulty = self.difficulty_var.get()
         
-        messagebox.showinfo("Test Complete!", 
+        # Determine the status message based on how the test ended
+        status_message = "Test Completed (Sentence Match)" if reason == "Sentence Completed" else "Test Completed (Time Expired)"
+        
+        messagebox.showinfo(status_message, 
                             f"**Difficulty: {difficulty}**\n\n"
-                            f"Time Taken: {time_taken:.2f} seconds\n"
+                            f"Duration: {time_taken:.2f} seconds\n"
                             f"Net WPM: {net_wpm:.0f}\n"
                             f"Character Errors: {error_count}")
         
