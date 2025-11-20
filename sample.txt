@@ -1,4 +1,4 @@
-[Easy]
+[EASY]
 The sun rises in the east
 Typing is fun and easy to learn
 Practice makes you better every day
@@ -26,7 +26,7 @@ We enjoyed a peaceful evening outside
 She drew a simple picture of a flower
 The cat jumped onto the soft bed
 
-[Medium]
+[MEDIUM]
 The quick brown fox jumps over the lazy dog
 Consistency is the key to improving typing speed
 Technology continues to evolve at a rapid pace
@@ -54,7 +54,7 @@ The coach encouraged the players to keep pushing forward
 She organized her workspace to stay focused and productive
 The community center offers a variety of educational programs
 
-[Hard]
+[HARD]
 The extraordinary complexity of human behavior continues to fascinate scientists around the world as they explore new theories and interdisciplinary approaches
 Innovative engineering solutions often emerge from unexpected technical challenges that require extensive research and collaborative problem solving
 Quantum computing promises to transform information processing by enabling computations that are far beyond the capabilities of classical systems
