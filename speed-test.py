@@ -5,6 +5,7 @@ Typing Speed Test App using Tkinter
 - Rounded typing input boxes (simulated using Canvas)
 - Starts directly into the test interface, filtering sentences only by difficulty (Easy/Medium/Hard).
 - Implements a fixed 5-minute (300 seconds) timer for the test duration.
+- Automatically starts a new test after each completion popup.
 """
 
 import tkinter as tk
@@ -43,7 +44,7 @@ def load_sentences(file_path="sample.txt"):
                     continue
 
                 # Check for Difficulty header [EASY], [MEDIUM], [HARD]
-                # Note: The provided file uses "[Easy]." but we check for the uppercase bracketed keyword
+                # We check for the uppercase bracketed keyword
                 if line.upper().startswith("[EASY]"):
                     current_level = "EASY"
                 elif line.upper().startswith("[MEDIUM]"):
@@ -465,7 +466,9 @@ class TypingTestApp:
 
 
     def end_test(self, time_taken, reason="Time Expired"):
-        """Finalizes the test, calculates results, and shows the popup."""
+        """
+        Finalizes the test, calculates results, shows the popup, and restarts the test.
+        """
         
         # Stop all processes and input
         self.stop_timer()
@@ -485,23 +488,17 @@ class TypingTestApp:
                 error_count += 1
         
         # 2. Calculate Final WPM (Net WPM)
-        # Net WPM = (Total Correct Characters / 5) / Time (in minutes)
-        
         total_correct_chars = len(final_typed_text) - error_count
         time_in_minutes = time_taken / 60
         
         if time_in_minutes > 0:
-            # Calculate WPM based on the actual time taken, even if it's less than 5 minutes
             net_wpm = max(0, (total_correct_chars / 5) / time_in_minutes)
         else:
             net_wpm = 0.0
 
         # 3. Update UI and Show Popup
         self.wpm_value_label.config(text=f"{net_wpm:.0f}")
-        
         difficulty = self.difficulty_var.get()
-        
-        # Determine the status message based on how the test ended
         status_message = "Test Completed (Sentence Match)" if reason == "Sentence Completed" else "Test Completed (Time Expired)"
         
         messagebox.showinfo(status_message, 
@@ -510,7 +507,8 @@ class TypingTestApp:
                             f"Net WPM: {net_wpm:.0f}\n"
                             f"Character Errors: {error_count}")
         
-        self.start_button.config(text="Start Test")
+        # 4. Automatically start a new test after the popup closes
+        self.start_test()
 
 
 if __name__ == "__main__":
