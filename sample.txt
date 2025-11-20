@@ -1,79 +1,79 @@
-[EASY]
-The sun rises in the east
-Typing is fun and easy to learn
-Practice makes you better every day
-Cats love to sleep in warm places
-I enjoy reading books at night
-The dog barked loudly at the mailman
-Fresh air makes morning walks enjoyable
-Birds fly high above the trees
-She smiled warmly at her friend
-The water in the river flows calmly
-I like to drink cold water on hot days
-The child played happily in the garden
-He wrote his name neatly on the paper
-The sky is bright and clear today
-We took a short break after lunch
-My brother loves playing football
-The cake tasted sweet and delicious
-The little boy hugged his teddy bear
-The teacher walked quietly into the class
-We laughed at the funny cartoon
-The baby giggled when the toy made a sound
-I picked a fresh apple from the tree
-The breeze felt cool on my face
-We enjoyed a peaceful evening outside
-She drew a simple picture of a flower
-The cat jumped onto the soft bed
+[Easy].
+The sun rises in the east.
+Typing is fun and easy to learn.
+Practice makes you better every day.
+Cats love to sleep in warm places.
+I enjoy reading books at night.
+The dog barked loudly at the mailman.
+Fresh air makes morning walks enjoyable.
+Birds fly high above the trees.
+She smiled warmly at her friend.
+The water in the river flows calmly.
+I like to drink cold water on hot days.
+The child played happily in the garden.
+He wrote his name neatly on the paper.
+The sky is bright and clear today.
+We took a short break after lunch.
+My brother loves playing football.
+The cake tasted sweet and delicious.
+The little boy hugged his teddy bear.
+The teacher walked quietly into the class.
+We laughed at the funny cartoon.
+The baby giggled when the toy made a sound.
+I picked a fresh apple from the tree.
+The breeze felt cool on my face.
+We enjoyed a peaceful evening outside.
+She drew a simple picture of a flower.
+The cat jumped onto the soft bed.
 
-[MEDIUM]
-The quick brown fox jumps over the lazy dog
-Consistency is the key to improving typing speed
-Technology continues to evolve at a rapid pace
-She carefully arranged the flowers on the table
-Good communication skills open many opportunities
-The weather forecast predicted heavy rainfall this week
-Developing new habits requires patience and discipline
-The library provides numerous resources for students
-He completed the assignment before the deadline
-The team worked together to solve the problem
-The scientist explained the results of the experiment clearly
-Confidence grows when you practice regularly
-Her creativity allowed her to design a beautiful layout
-The companys success relied on strategic planning
-Students must balance schoolwork and personal life
-The software update improved performance significantly
-He walked through the crowded market without hesitation
-The museum displayed ancient artifacts from various cultures
-The garden was filled with colorful flowers and butterflies
-Time management helps reduce unnecessary stress
-Learning a new language becomes easier with constant practice
-The new policy aims to improve public safety in urban areas
-Healthy eating habits contribute to long term wellness
-The coach encouraged the players to keep pushing forward
-She organized her workspace to stay focused and productive
-The community center offers a variety of educational programs
+[Medium].
+The quick brown fox jumps over the lazy dog.
+Consistency is the key to improving typing speed.
+Technology continues to evolve at a rapid pace.
+She carefully arranged the flowers on the table.
+Good communication skills open many opportunities.
+The weather forecast predicted heavy rainfall this week.
+Developing new habits requires patience and discipline.
+The library provides numerous resources for students.
+He completed the assignment before the deadline.
+The team worked together to solve the problem.
+The scientist explained the results of the experiment clearly.
+Confidence grows when you practice regularly.
+Her creativity allowed her to design a beautiful layout.
+The companys success relied on strategic planning.
+Students must balance schoolwork and personal life.
+The software update improved performance significantly.
+He walked through the crowded market without hesitation.
+The museum displayed ancient artifacts from various cultures.
+The garden was filled with colorful flowers and butterflies.
+Time management helps reduce unnecessary stress.
+Learning a new language becomes easier with constant practice.
+The new policy aims to improve public safety in urban areas.
+Healthy eating habits contribute to long term wellness.
+The coach encouraged the players to keep pushing forward.
+She organized her workspace to stay focused and productive.
+The community center offers a variety of educational programs.
 
-[HARD]
-The extraordinary complexity of human behavior continues to fascinate scientists around the world as they explore new theories and interdisciplinary approaches
-Innovative engineering solutions often emerge from unexpected technical challenges that require extensive research and collaborative problem solving
-Quantum computing promises to transform information processing by enabling computations that are far beyond the capabilities of classical systems
-The synchronization of distributed systems relies on extremely precise timing mechanisms that ensure seamless communication across multiple networks
-A multidisciplinary approach significantly enhances the effectiveness of modern problem solving strategies especially in large scale scientific and technological projects
-The architectural design incorporated sustainable materials and advanced structural concepts to improve energy efficiency and environmental performance
-Advanced cryptographic algorithms play a vital role in securing sensitive data across global communication networks and digital infrastructures
-Environmental researchers emphasize the long term importance of ecological preservation as human activities continue to impact fragile ecosystems
-Economic fluctuations influence the development of international trade policies requiring nations to adapt to shifting financial conditions
-Artificial intelligence is transforming industries through automation optimization and the creation of new computational models for decision making
-The intricate relationship between culture and language has been examined for centuries revealing deep connections between identity communication and social evolution
-Renewable energy technologies play a crucial role in reducing global carbon emissions and supporting the transition to a more sustainable future
-The effectiveness of a neural network depends heavily on the quality diversity and structure of the data used during its training process
-Pharmaceutical innovations have greatly improved modern healthcare outcomes by enabling safer diagnostics more efficient treatments and advanced medical research
-Accurate climate predictions require comprehensive atmospheric modeling techniques that integrate data from satellites weather stations and computational simulations
-The transportation sector is undergoing a major transition toward cleaner alternatives driven by environmental concerns and technological advancements
-Complex machine learning algorithms enable computers to interpret massive datasets with remarkable accuracy revealing patterns that humans may overlook
-Scientists use particle accelerators to study the fundamental components of matter unlocking new insights into the nature of the universe
-The evolution of digital communication continues to reshape social interactions influencing how people connect share information and build communities across the world
-Understanding the brains intricate neural pathways remains one of the greatest scientific challenges due to their complexity and dynamic behavior
-Long term space exploration requires advanced engineering systems capable of supporting human life under extreme environmental conditions far beyond Earth
-Global cybersecurity threats are becoming increasingly sophisticated prompting researchers to develop stronger defensive frameworks and intelligent intrusion detection systems
+[Hard].
+The extraordinary complexity of human behavior continues to fascinate scientists around the world as they explore new theories and interdisciplinary approaches.
+Innovative engineering solutions often emerge from unexpected technical challenges that require extensive research and collaborative problem solving.
+Quantum computing promises to transform information processing by enabling computations that are far beyond the capabilities of classical systems.
+The synchronization of distributed systems relies on extremely precise timing mechanisms that ensure seamless communication across multiple networks.
+A multidisciplinary approach significantly enhances the effectiveness of modern problem solving strategies especially in large scale scientific and technological projects.
+The architectural design incorporated sustainable materials and advanced structural concepts to improve energy efficiency and environmental performance.
+Advanced cryptographic algorithms play a vital role in securing sensitive data across global communication networks and digital infrastructures.
+Environmental researchers emphasize the long term importance of ecological preservation as human activities continue to impact fragile ecosystems.
+Economic fluctuations influence the development of international trade policies requiring nations to adapt to shifting financial conditions.
+Artificial intelligence is transforming industries through automation optimization and the creation of new computational models for decision making.
+The intricate relationship between culture and language has been examined for centuries revealing deep connections between identity communication and social evolution.
+Renewable energy technologies play a crucial role in reducing global carbon emissions and supporting the transition to a more sustainable future.
+The effectiveness of a neural network depends heavily on the quality diversity and structure of the data used during its training process.
+Pharmaceutical innovations have greatly improved modern healthcare outcomes by enabling safer diagnostics more efficient treatments and advanced medical research.
+Accurate climate predictions require comprehensive atmospheric modeling techniques that integrate data from satellites weather stations and computational simulations.
+The transportation sector is undergoing a major transition toward cleaner alternatives driven by environmental concerns and technological advancements.
+Complex machine learning algorithms enable computers to interpret massive datasets with remarkable accuracy revealing patterns that humans may overlook.
+Scientists use particle accelerators to study the fundamental components of matter unlocking new insights into the nature of the universe.
+The evolution of digital communication continues to reshape social interactions influencing how people connect share information and build communities across the world.
+Understanding the brains intricate neural pathways remains one of the greatest scientific challenges due to their complexity and dynamic behavior.
+Long term space exploration requires advanced engineering systems capable of supporting human life under extreme environmental conditions far beyond Earth.
+Global cybersecurity threats are becoming increasingly sophisticated prompting researchers to develop stronger defensive frameworks and intelligent intrusion detection systems.
