@@ -43,16 +43,21 @@ def load_sentences(file_path="sample.txt"):
                     continue
 
                 # Check for Difficulty header [EASY], [MEDIUM], [HARD]
-                if line.upper() == "[EASY]":
+                # Note: The provided file uses "[Easy]." but we check for the uppercase bracketed keyword
+                if line.upper().startswith("[EASY]"):
                     current_level = "EASY"
-                elif line.upper() == "[MEDIUM]":
+                elif line.upper().startswith("[MEDIUM]"):
                     current_level = "MEDIUM"
-                elif line.upper() == "[HARD]":
+                elif line.upper().startswith("[HARD]"):
                     current_level = "HARD"
                 
-                # If a level is active and the line ends with a period, add it as a sentence
-                elif current_level and line.endswith('.'):
-                    all_sentences[current_level].append(line)
+                # If a level is active and the line is not the header itself, add it as a sentence
+                elif current_level and line:
+                    # Clean up any potential leading periods from the user's formatting "[Easy]."
+                    if line.startswith('.') and len(line) > 1:
+                         line = line[1:].strip()
+                    if line: # Ensure line is not empty after stripping
+                        all_sentences[current_level].append(line)
 
     except FileNotFoundError:
         messagebox.showerror("Error", f"File not found! Expected path: {full_path}")
@@ -318,6 +323,7 @@ class TypingTestApp:
             messagebox.showerror("Error", f"No sentences available for difficulty: {difficulty}!")
             return
 
+        # Use a new random sentence for a fresh start
         self.target_sentence = random.choice(self.all_sentences[difficulty])
         self.sentence_len = len(self.target_sentence)
         text_widget = self.input_box.master.winfo_children()[0]
@@ -372,7 +378,7 @@ class TypingTestApp:
 
     def update_timer(self):
         """Updates the timer label and checks for time expiry."""
-        if not self.is_running:
+        if not self.is_running or self.start_time is None:
             return
 
         time_elapsed = time.time() - self.start_time
@@ -413,10 +419,11 @@ class TypingTestApp:
             return
 
         text_widget = self.input_box.master.winfo_children()[0]
+        # Get the text actually typed, up to the length of the target sentence, and remove the trailing newline
         user_text = text_widget.get("1.0", tk.END + "-1c")
-        user_text_len = len(user_text)
-        target_len = self.sentence_len
+        
         target = self.target_sentence
+        target_len = self.sentence_len
         
         # 1. Clear previous tags
         text_widget.tag_remove("correct", "1.0", tk.END)
@@ -425,29 +432,30 @@ class TypingTestApp:
 
         # 2. Apply coloring and calculate errors live
         error_count = 0
-        for i, char in enumerate(user_text):
+        
+        for i in range(len(user_text)):
+            char = user_text[i]
             start_index = f"1.{i}"
             end_index = f"1.{i+1}"
-            
+
             if i < target_len:
+                # Character within target length
                 if char == target[i]:
                     text_widget.tag_add("correct", start_index, end_index)
                 else:
                     text_widget.tag_add("incorrect", start_index, end_index)
                     error_count += 1
             else:
+                # Extra characters typed beyond the target sentence length
                 text_widget.tag_add("extra", start_index, end_index)
 
         # --- Live WPM Update ---
-        if user_text_len > 0:
-            time_elapsed = time.time() - self.start_time
-            if time_elapsed > 1:
-                # WPM based on characters typed (CPM / 5)
-                cpm = (user_text_len / time_elapsed) * 60
-                # Using a fixed 5-minute time frame for WPM calculation is not accurate for short bursts,
-                # so we stick to the traditional live WPM formula until the end of the test.
-                live_wpm = max(0, (cpm / 5) - (error_count / 5)) 
-                self.wpm_value_label.config(text=f"{live_wpm:.0f}")
+        time_elapsed = time.time() - self.start_time
+        if time_elapsed > 1 and len(user_text) > 0:
+            # WPM based on total characters typed
+            cpm = (len(user_text) / time_elapsed) * 60
+            live_wpm = max(0, (cpm / 5) - (error_count / 5)) 
+            self.wpm_value_label.config(text=f"{live_wpm:.0f}")
 
         # --- Manual Sentence Completion Check (Optional End) ---
         # The user has successfully typed the entire required sentence
@@ -465,10 +473,10 @@ class TypingTestApp:
         self.is_running = False
 
         text_widget = self.input_box.master.winfo_children()[0]
-        # Get the text actually typed *within* the required sentence length
+        # Get the typed text up to the length of the current target sentence
         final_typed_text = text_widget.get("1.0", f"1.{self.sentence_len}")
         
-        # 1. Calculate Errors
+        # 1. Calculate Errors (only against the target sentence)
         error_count = 0
         target = self.target_sentence
         
@@ -477,13 +485,13 @@ class TypingTestApp:
                 error_count += 1
         
         # 2. Calculate Final WPM (Net WPM)
-        # Net WPM must be calculated based on the total time of the test run.
-        # Net WPM = (Total Correct Characters / 5 - Errors) / Time (in minutes)
+        # Net WPM = (Total Correct Characters / 5) / Time (in minutes)
         
         total_correct_chars = len(final_typed_text) - error_count
         time_in_minutes = time_taken / 60
         
         if time_in_minutes > 0:
+            # Calculate WPM based on the actual time taken, even if it's less than 5 minutes
             net_wpm = max(0, (total_correct_chars / 5) / time_in_minutes)
         else:
             net_wpm = 0.0
