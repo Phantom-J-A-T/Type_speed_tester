@@ -3,75 +3,69 @@ Typing Speed Test App using Tkinter
 - Light/Dark theme toggle
 - Modern UI layout
 - Rounded typing input boxes (simulated using Canvas)
-- Initial startup screen to collect user name and subject
+- Starts directly into the test interface, filtering sentences only by difficulty (Easy/Medium/Hard).
 """
 
 import tkinter as tk
 from tkinter import ttk, messagebox
 import time
 import random
-import os # Import os for robust path handling
+import os
 
 # -----------------------------
 # Load and Structure Sentences
 # -----------------------------
 def load_sentences(file_path="sample.txt"):
     """
-    Loads sentences from the text file, grouping them by Subject and then by Difficulty.
+    Loads sentences from the text file, grouping them only by Difficulty.
     
     Returns: 
-        dict: {Subject: {Difficulty: [sentences]}}
+        dict: {Difficulty: [sentences]}
     """
-    all_subjects = {}
-    current_subject = None
+    # Initialize structure to store sentences by difficulty
+    all_sentences = {"EASY": [], "MEDIUM": [], "HARD": []}
     current_level = None
 
     # --- FIX: Ensure file path is relative to the script location ---
-    # Get the directory of the current script (typing_test.py)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    # Construct the full path to the sample.txt file
     full_path = os.path.join(script_dir, file_path)
     # -----------------------------------------------------------------
 
     try:
-        # Use the full_path when opening the file
         with open(full_path, "r", encoding="utf-8") as file:
             for line in file:
                 line = line.strip()
                 if not line:
                     continue
+
+                # Check for Difficulty header [EASY], [MEDIUM], [HARD]
+                if line.upper() == "[EASY]":
+                    current_level = "EASY"
+                elif line.upper() == "[MEDIUM]":
+                    current_level = "MEDIUM"
+                elif line.upper() == "[HARD]":
+                    current_level = "HARD"
                 
-                # Check for Subject marker (e.g., [PHYSICS])
-                if line.startswith("[") and line.endswith("]"):
-                    subject = line[1:-1]
-                    current_subject = subject
-                    all_subjects[current_subject] = {"EASY": [], "MEDIUM": [], "HARD": []}
-                    current_level = None # Reset level when subject changes
-                
-                # Check for Difficulty level within a Subject block
-                elif current_subject and line.upper().startswith(("EASY:", "MEDIUM:", "HARD:")):
-                    parts = line.split(":", 1)
-                    level = parts[0].strip().upper()
-                    sentence_text = parts[1].strip()
-                    
-                    if level in all_subjects[current_subject]:
-                        current_level = level
-                        # Split by period and filter out short empty strings, then re-join with a period
-                        sentences = [s.strip() for s in sentence_text.split('.') if s.strip()]
-                        for sentence in sentences:
-                            # Add back the period if it was removed
-                            all_subjects[current_subject][current_level].append(sentence + '.')
+                # If a level is active and the line ends with a period, add it as a sentence
+                elif current_level and line.endswith('.'):
+                    all_sentences[current_level].append(line)
 
     except FileNotFoundError:
-        # Show specific error mentioning the path it was looking for
         messagebox.showerror("Error", f"File not found! Expected path: {full_path}")
+        return {} # Return empty dict to prevent app crash
     except Exception as e:
         messagebox.showerror("Error", f"Error processing sample.txt: {e}")
+        return {}
+    
+    # Final check for data
+    if not any(all_sentences.values()):
+        messagebox.showerror("Error", "No sentences found in sample.txt under [EASY], [MEDIUM], or [HARD] headings.")
+        return {}
 
-    return all_subjects
+    return all_sentences
 
 # -----------------------------
-# Rounded Entry / Text creators
+# Rounded Entry / Text creators (Same as before)
 # -----------------------------
 
 def create_rounded_textbox(parent, width=80, height=6, bg="#ffffff", radius=25):
@@ -108,7 +102,7 @@ def create_rounded_textbox(parent, width=80, height=6, bg="#ffffff", radius=25):
     return text_widget
 
 # -----------------------------
-# Main App Class
+# Main App Class (Refactored)
 # -----------------------------
 
 class TypingTestApp:
@@ -118,21 +112,14 @@ class TypingTestApp:
         self.root.geometry("900x700")
         self.root.resizable(False, False)
         
-        # Load all data upfront
+        # Load all data upfront (only by difficulty now)
         self.all_sentences = load_sentences()
-        self.subjects = list(self.all_sentences.keys())
         
         # Check if any data exists
-        if not self.subjects:
-            # We already displayed an error in load_sentences, just destroy
+        if not any(self.all_sentences.values()):
             self.root.destroy()
             return
 
-        # State variables for user info (initialized in setup_login_ui)
-        self.user_name = None
-        self.selected_subject = None
-        self.sentences = {}
-        
         # Test state variables
         self.target_sentence = ""
         self.start_time = None
@@ -143,97 +130,28 @@ class TypingTestApp:
         self.correct_color = "#1E8449" 
         self.incorrect_color = "#C0392B"
 
-        # Start by setting up the login screen
-        self.setup_login_ui()
-        # Apply the default theme to the root window (important for the login screen background)
-        self.apply_theme() 
-
-    def setup_login_ui(self):
-        """Creates and displays the login input elements on the main window."""
+        # Start directly in the test view
+        self.setup_test_ui()
+        self.apply_theme()
         
-        # Configure root grid for the login frame to be centered
-        self.root.grid_rowconfigure(0, weight=1) 
-        self.root.grid_rowconfigure(1, weight=1) 
-        self.root.grid_columnconfigure(0, weight=1)
+        # Initial binding setup (after UI creation)
+        if hasattr(self, 'input_box'):
+            text_widget = self.input_box.master.winfo_children()[0]
+            self.start_timer_binding = text_widget.bind("<KeyPress>", self.start_timer)
+            self.root.title("Typing Test App - Ready") # Set a default title
+
+
+    # Login UI setup and start_test_app removed
+    # setup_test_ui is now the starting point for the main view
+
+    def setup_test_ui(self):
+        """Creates the main typing test interface elements."""
         
-        # Create a central frame for the login UI
-        self.login_frame = ttk.Frame(self.root, padding="40 40 40 40")
-        self.login_frame.grid(row=0, column=0, sticky="nsew", rowspan=2, columnspan=1)
-        
-        # Center contents within the login frame
-        self.login_frame.grid_columnconfigure(0, weight=1)
-        self.login_frame.grid_rowconfigure(0, weight=1)
-        self.login_frame.grid_rowconfigure(5, weight=1)
-        
-        login_inner_frame = ttk.Frame(self.login_frame)
-        login_inner_frame.grid(row=1, column=0)
-        
-        # Variables to hold user input
-        self.user_name_var = tk.StringVar(value="")
-        self.selected_subject_var = tk.StringVar(value=self.subjects[0])
-        
-        # 1. Title
-        ttk.Label(login_inner_frame, text="Welcome to the Typing Test", font=("Arial", 16, "bold")).pack(pady=20)
-
-        # 2. Name Input
-        ttk.Label(login_inner_frame, text="Enter Your Name:", font=("Arial", 12, "bold")).pack(pady=5, anchor="w")
-        name_entry = ttk.Entry(login_inner_frame, textvariable=self.user_name_var, width=30, font=("Arial", 12))
-        name_entry.pack(pady=5)
-        name_entry.focus_set()
-
-        # 3. Subject Selection
-        ttk.Label(login_inner_frame, text="Choose Subject:", font=("Arial", 12, "bold")).pack(pady=5, anchor="w")
-        subject_menu = ttk.Combobox(login_inner_frame, textvariable=self.selected_subject_var,
-                                    values=self.subjects, state="readonly", width=28,
-                                    font=("Arial", 12))
-        subject_menu.pack(pady=5)
-        subject_menu.set(self.subjects[0])
-
-        # 4. Start Button
-        ttk.Button(login_inner_frame, text="Continue to Test", command=self.start_test_app, 
-                   style="Black.TButton").pack(pady=20, ipadx=10, ipady=5)
-
-    def start_test_app(self):
-        """Validates login details and transitions the UI to the main test view."""
-        
-        name = self.user_name_var.get().strip()
-        if not name:
-            messagebox.showerror("Error", "Please enter your name.")
-            return
-
-        self.user_name = name
-        self.selected_subject = self.selected_subject_var.get()
-        self.sentences = self.all_sentences.get(self.selected_subject, {})
-
-        if not any(self.sentences.values()):
-            messagebox.showerror("Error", f"No sentences available for the subject: {self.selected_subject}")
-            return
-
-        # Destroy the login UI
-        self.login_frame.destroy()
-        
-        # Update the main window title
-        self.root.title(f"{self.user_name}'s Typing Test - {self.selected_subject}")
-
-        # Reconfigure root grid for the main test UI
+        # Configure root grid for the main test UI
         self.root.grid_rowconfigure(0, weight=0) # Top Bar
         self.root.grid_rowconfigure(1, weight=1) # Main Content (text boxes)
         self.root.grid_rowconfigure(2, weight=0) # Bottom Bar
         self.root.grid_columnconfigure(0, weight=1)
-        
-        # Setup and initialize the main test UI
-        self.setup_test_ui()
-        self.apply_theme()
-        
-        # Initial binding setup (can only be done after input_box is created)
-        if hasattr(self, 'input_box'):
-            # The actual text widget is the first child of the canvas
-            text_widget = self.input_box.master.winfo_children()[0]
-            self.start_timer_binding = text_widget.bind("<KeyPress>", self.start_timer)
-
-
-    def setup_test_ui(self):
-        """Creates the main typing test interface elements."""
         
         # --- Top Bar ---
         self.top_bar = tk.Frame(self.root)
@@ -274,7 +192,6 @@ class TypingTestApp:
         self.sentence_box.config(state="disabled")
         
         self.input_box = create_rounded_textbox(self.main_content, bg="#ffffff")
-        # Bindings are set in start_test_app() now
 
         # --- Bottom Bar ---
         self.bottom_bar = tk.Frame(self.root)
@@ -310,8 +227,8 @@ class TypingTestApp:
         # Apply root background
         self.root.configure(bg=bg_color)
         
-        # Style all frames (Login frame might exist)
-        frames_to_style = [self.login_frame] if hasattr(self, 'login_frame') and self.login_frame.winfo_exists() else []
+        # Style all frames 
+        frames_to_style = []
         if hasattr(self, 'top_bar'):
             frames_to_style.extend([self.top_bar, self.main_content, self.bottom_bar, self.theme_frame, self.wpm_frame])
         
@@ -356,7 +273,7 @@ class TypingTestApp:
                   selectbackground=[('readonly', inv_bg_color)],
                   selectforeground=[('readonly', inv_fg_color)])
 
-        # WPM Labels (Only if test UI exists)
+        # WPM Labels
         if hasattr(self, 'wpm_frame') and self.wpm_frame.winfo_exists():
             style.configure("WPM.TLabel",
                             background=inv_bg_color,
@@ -377,7 +294,7 @@ class TypingTestApp:
             foreground=[('active', fg_color)]
         )
 
-        # Text Boxes (Only if test UI exists)
+        # Text Boxes
         if hasattr(self, 'input_box'):
             for canvas in [self.sentence_box.master, self.input_box.master]:
                 canvas.config(bg=bg_color) 
@@ -405,15 +322,14 @@ class TypingTestApp:
 
 
     def start_test(self):
-        # Difficulty is now a key in the filtered sentences dictionary
         difficulty = self.difficulty_var.get()
         
         # Check if the sentence list for the current difficulty is valid and not empty
-        if difficulty not in self.sentences or not self.sentences[difficulty]:
-            messagebox.showerror("Error", f"No sentences for {self.selected_subject} - {difficulty} difficulty!")
+        if difficulty not in self.all_sentences or not self.all_sentences[difficulty]:
+            messagebox.showerror("Error", f"No sentences available for difficulty: {difficulty}!")
             return
 
-        self.target_sentence = random.choice(self.sentences[difficulty])
+        self.target_sentence = random.choice(self.all_sentences[difficulty])
         self.sentence_len = len(self.target_sentence)
         text_widget = self.input_box.master.winfo_children()[0]
         
@@ -435,10 +351,11 @@ class TypingTestApp:
         text_widget.tag_remove("extra", "1.0", tk.END)
 
         # Re-bind start_timer in case it was unbound
-        # Note: Binds KeyPress and KeyRelease to the Text widget *inside* the canvas
         text_widget.bind("<KeyPress>", self.start_timer)
         text_widget.bind("<KeyRelease>", self.check_completion)
         self.start_timer_binding = text_widget.bind("<KeyPress>", self.start_timer)
+        
+        self.root.title(f"Typing Test App - {difficulty}")
 
 
     def start_timer(self, event):
@@ -525,15 +442,14 @@ class TypingTestApp:
                 error_count += 1
         
         # 2. Calculate Final WPM (Net WPM)
-        words = len(self.target_sentence.split())
+        # Using character count instead of splitting by space for more accuracy with varied difficulty
+        total_typed_chars = len(target)
         
-        # Gross WPM (Words / Time in minutes)
-        gross_wpm = (words / time_taken) * 60
-        
-        # Net WPM (Gross WPM - (Errors / Time in minutes))
-        # Assuming one word is 5 characters, one error is 1 word WPM penalty
+        # Net WPM (Gross CPM / 5) - Penalty
+        net_cpm = (total_typed_chars / time_taken) * 60
+        # Penalty: one character error = 1 WPM penalty
         error_penalty_wpm = error_count / 5
-        net_wpm = max(0, gross_wpm - error_penalty_wpm)
+        net_wpm = max(0, (net_cpm / 5) - error_penalty_wpm)
 
         if time_taken < 0.1: 
             net_wpm = 0.0 # Prevent division by near-zero
@@ -541,11 +457,11 @@ class TypingTestApp:
         # 3. Update UI and Show Popup
         self.wpm_value_label.config(text=f"{net_wpm:.0f}")
         
+        difficulty = self.difficulty_var.get()
+        
         messagebox.showinfo("Test Complete!", 
-                            f"**User: {self.user_name}**\n"
-                            f"**Subject: {self.selected_subject}**\n\n"
+                            f"**Difficulty: {difficulty}**\n\n"
                             f"Time Taken: {time_taken:.2f} seconds\n"
-                            f"Gross WPM: {gross_wpm:.0f}\n"
                             f"Net WPM: {net_wpm:.0f}\n"
                             f"Character Errors: {error_count}")
         
